@@ -1,0 +1,16 @@
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 450
+FPS = 60
+
+# Colors
+WHITE = (255, 255, 255)
+BLUE = (135, 206, 250)
+BROWN = (139, 69, 19)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+BLACK = (0, 0, 0)
+
+# Game speeds
+SCROLL_SPEED = 5
+GRAVITY = 1
+JUMP_FORCE = 18
