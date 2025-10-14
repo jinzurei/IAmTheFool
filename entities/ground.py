@@ -21,7 +21,12 @@ class Ground(ScrollableEntity):
         self.current_color_index = region_index % len(self.colors)
         self.color = self.colors[self.current_color_index]
 
-    def draw(self, surface: pygame.Surface) -> None:
-        """Draw the ground segments on the given surface."""
-        pygame.draw.rect(surface, self.color, (self.x1, self.y, self.width, self.height))
-        pygame.draw.rect(surface, self.color, (self.x2, self.y, self.width, self.height))
+    def draw(self, surface: pygame.Surface, camera_offset=None) -> None:
+        """
+        Draw the ground segments on the given surface, subtracting camera offset.
+        All world objects must use the same camera offset for consistent scrolling.
+        """
+        if camera_offset is None:
+            camera_offset = (0, 0)
+        pygame.draw.rect(surface, self.color, (self.x1 - camera_offset[0], self.y - camera_offset[1], self.width, self.height))
+        pygame.draw.rect(surface, self.color, (self.x2 - camera_offset[0], self.y - camera_offset[1], self.width, self.height))

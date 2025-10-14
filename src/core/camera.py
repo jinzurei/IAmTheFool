@@ -1,40 +1,29 @@
-"""
-Camera system with Y-sorted group and offset for jitter-free scrolling
-"""
-
 import pygame
 from src.config.settings import SCREEN_WIDTH, SCREEN_HEIGHT, RIGHT_KEYS
 
+class CameraLookAhead:
+    def __init__(self):
+        self.offset = pygame.Vector2(0, 0)
+    def update(self, target_pos, dt):
+        self.offset.x = int(target_pos[0])
+        self.offset.y = int(target_pos[1])
+
 class YSortCameraGroup(pygame.sprite.Group):
-    """
-    Y-sorted camera group with offset for smooth scrolling
-    Offset is applied only at draw time, never to physics rects
-    """
-    
     def __init__(self):
         super().__init__()
         self.display_surface = pygame.display.get_surface()
         self.offset = pygame.math.Vector2()
-        
-    def custom_draw(self, player):
-        """
-        Draw all sprites with camera offset
-        Camera centers player even further to the right (e.g., 60% of screen width)
-        """
-        # Align the green collision box (player.rect) at 60% of the screen width
-        desired_x = int(SCREEN_WIDTH * 0.6)
-        desired_y = SCREEN_HEIGHT // 2
-        self.offset.x = player.rect.centerx - desired_x
-        self.offset.y = player.rect.centery - desired_y
-
-        # Sort sprites by y position for proper depth
-        sorted_sprites = sorted(self.sprites(), key=lambda sprite: sprite.rect.centery)
-
-        # Draw each sprite with offset applied
-        for sprite in sorted_sprites:
-            offset_pos = sprite.rect.topleft - self.offset
-            if hasattr(sprite, 'draw') and sprite.__class__.__name__ == 'Player':
-                # Draw player with custom alignment
-                sprite.draw(self.display_surface)
+    def custom_draw(self, target_sprite):
+        screen_center = pygame.Vector2(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.offset.x = int(target_sprite.rect.centerx - screen_center.x)
+        self.offset.y = int(target_sprite.rect.centery - screen_center.y)
+        for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
+            if hasattr(sprite, 'draw'):
+                try:
+                    sprite.draw(self.display_surface, self.offset)
+                except TypeError:
+                    offset_pos = (sprite.rect.x - self.offset.x, sprite.rect.y - self.offset.y)
+                    self.display_surface.blit(sprite.image, offset_pos)
             else:
+                offset_pos = (sprite.rect.x - self.offset.x, sprite.rect.y - self.offset.y)
                 self.display_surface.blit(sprite.image, offset_pos)

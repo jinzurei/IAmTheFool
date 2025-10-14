@@ -15,10 +15,15 @@ class Background(ScrollableEntity):
         self.color1 = self.colors[self.color_index]
         self.color2 = self.colors[(self.color_index + 1) % len(self.colors)]
 
-    def draw(self, surface: pygame.Surface) -> None:
-        """Draw the background segments on the given surface."""
-        pygame.draw.rect(surface, self.color1, (self.x1, 0, self.width, self.height))
-        pygame.draw.rect(surface, self.color2, (self.x2, 0, self.width, self.height))
+    def draw(self, surface: pygame.Surface, camera_offset=None) -> None:
+        """
+        Draw the background segments on the given surface, subtracting camera offset.
+        All world objects must use the same camera offset for consistent scrolling.
+        """
+        if camera_offset is None:
+            camera_offset = (0, 0)
+        pygame.draw.rect(surface, self.color1, (self.x1 - camera_offset[0], 0 - camera_offset[1], self.width, self.height))
+        pygame.draw.rect(surface, self.color2, (self.x2 - camera_offset[0], 0 - camera_offset[1], self.width, self.height))
 
     def set_region(self, index: int) -> None:
         """Set the background region/theme based on index."""

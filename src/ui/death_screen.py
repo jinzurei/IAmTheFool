@@ -86,7 +86,3 @@ class DeathScreen:
             
             self.screen.blit(option_text, option_rect)
         
-        # Draw controls hint
-        hint_text = self.font_small.render("Use W/S or ↑/↓ to navigate, ENTER/SPACE to select, or CLICK buttons", True, self.text_color)
-        hint_rect = hint_text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT - 50))
-        self.screen.blit(hint_text, hint_rect)

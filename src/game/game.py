@@ -1,52 +1,55 @@
 import pygame
-from typing import Tuple, List
 from src.config import settings
-from src.core.camera import YSortCameraGroup
+from src.core.camera import YSortCameraGroup, CameraLookAhead
 from src.entities.player import Player
 from src.entities.tile import StaticTile
 
 class Game:
-    """Main game class that manages the game loop and entities."""
-    def __init__(self) -> None:
-        """Initialize the game with all necessary components."""
+    def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT), pygame.RESIZABLE)
         pygame.display.set_caption("I Am The Fool")
         self.clock = pygame.time.Clock()
         self.running = True
         self.font = pygame.font.SysFont(None, 36)
-
-        # Game state management
         self.game_state = settings.MENU
-
-        # Camera system
         self.camera = YSortCameraGroup()
-
-        # Game entities (initialized when starting game)
+        self.cam_lookahead = CameraLookAhead()
         self.player = Player()
-        self.obstacles = []  # Multiple obstacles for better world generation
+        self.obstacles = []
         self.background = None
         self.ground = None
-
-        self.collision_state = "none"  # none, collision, game_over
-        self.current_region = 0
-        self.distance_traveled = 0
-
-    def run(self) -> None:
-        """Run the main game loop."""
+    self.collision_state = "none"
+    self.current_region = 0
+    self.distance_traveled = 0
+    def run(self):
+        dt = 0
         while self.running:
             events = pygame.event.get()
             keys = pygame.key.get_pressed()
+            if keys[pygame.K_F6]:
+                w, h = self.player.rect.size
+                self.player.rect.size = (w, h + 1)
+                self.player._rescale_draw_image_to_collider(self.player._art_pad)
+            if keys[pygame.K_F7]:
+                w, h = self.player.rect.size
+                self.player.rect.size = (w, max(1, h - 1))
+                self.player._rescale_draw_image_to_collider(self.player._art_pad)
             self.handle_events(events, keys)
-            self.update(keys)
+            self.player.update(dt, self.obstacles)
+            self.cam_lookahead.update(self.player.rect.center, dt)
             self.draw()
+            dt = self.clock.tick(60) / 1000.0
     def draw(self):
         self.screen.fill(settings.BLUE)
-        # Use camera's custom_draw to render all sprites
-        self.camera.custom_draw(self.player)
-
-    def handle_events(self, events: List[pygame.event.Event], keys: pygame.key.ScancodeWrapper) -> None:
-        """Handle pygame events based on current game state."""
+        cam_offset = (int(self.cam_lookahead.offset.x), int(self.cam_lookahead.offset.y))
+        self.player.draw(self.screen, camera_offset=cam_offset)
+        for obstacle in self.obstacles:
+            if hasattr(obstacle, 'draw'):
+                obstacle.draw(self.screen, camera_offset=cam_offset)
+            else:
+                self.screen.blit(obstacle.image, obstacle.rect.move(-cam_offset[0], -cam_offset[1]))
+    def handle_events(self, events, keys):
         for event in events:
             if event.type == pygame.QUIT:
                 self.running = False
