@@ -1,6 +1,6 @@
 import pygame
 from typing import List, Tuple
-from core import settings
+from src.core import settings
 from entities.scrollable import ScrollableEntity
 
 class Background(ScrollableEntity):

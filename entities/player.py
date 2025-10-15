@@ -1,5 +1,5 @@
 import pygame
-from core import settings
+from src.core import settings
 
 class Player:
     """Player character with movement and jumping capabilities."""
