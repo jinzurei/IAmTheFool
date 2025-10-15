@@ -9,6 +9,7 @@
 | `2`   | Platform tile | Thin platform | Grey `(100, 100, 100)` | Solid | Used for jumping, not ground |
 | `3`   | Visible hazard | Red spikes | Red `(220, 20, 20)` | Deadly | Kills player on contact, clearly visible |
 | `4`   | Invisible hazard | None (transparent) | None | Deadly | Kills player, not visible, for traps |
+| `5`   | Spawn tile | Yellow square | Yellow `(255, 255, 0)` | No collision | Player spawns here |
 
 ## Map Layout Information
 

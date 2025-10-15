@@ -2,7 +2,7 @@ import pygame
 from src.config import settings
 from src.core.camera import YSortCameraGroup, CameraLookAhead
 from src.entities.player import Player
-from src.entities.tile import StaticTile
+from src.entities.tile import StaticTile, SpawnTile
 
 class Game:
     def __init__(self):
@@ -15,13 +15,26 @@ class Game:
         self.game_state = settings.MENU
         self.camera = YSortCameraGroup()
         self.cam_lookahead = CameraLookAhead()
-        self.player = Player()
         self.obstacles = []
         self.background = None
         self.ground = None
-    self.collision_state = "none"
-    self.current_region = 0
-    self.distance_traveled = 0
+        self.collision_state = "none"
+        self.current_region = 0
+        self.distance_traveled = 0
+
+        # Load map and find spawn tile
+        from src.core.support import load_csv_layout
+        map_layout = load_csv_layout("src/scenes/scene_1/map.csv")
+        spawn_pos = None
+        for row_idx, row in enumerate(map_layout):
+            for col_idx, val in enumerate(row):
+                if val == '5':
+                    spawn_pos = (col_idx * settings.TILE_SIZE, row_idx * settings.TILE_SIZE)
+                    # Optionally add the SpawnTile to obstacles for rendering
+                    self.obstacles.append(SpawnTile(spawn_pos, []))
+        if spawn_pos is None:
+            spawn_pos = (100, 300)  # fallback default
+        self.player = Player(spawn_pos, [])
     def run(self):
         dt = 0
         while self.running:
