@@ -2,15 +2,13 @@
 
 ## Tile Values and Their Meanings
 
-| Value | Description | Color | Collision |
-|-------|-------------|-------|-----------|
-| `-1`  | Empty space (transparent) | Sky blue background | No collision |
-| `0`   | Empty space (transparent) | Sky blue background | No collision |
-| `1`   | Ground tiles | Brown `(139, 69, 19)` | Solid collision |
-| `2`   | Platform tiles | Grey `(100, 100, 100)` | Solid collision |
-| `3`   | Platform tiles | Grey `(100, 100, 100)` | Solid collision |
-| `4`   | **Visible hazards** | Red spikes `(220, 20, 20)` | **DEADLY** - Kills player |
-| `5`   | **Invisible hazards** | Transparent | **DEADLY** - Kills player |
+| Value | Description | Visual | Color | Collision | Notes |
+|-------|-------------|--------|-------|-----------|-------|
+| `0`   | Empty space | Sky/Background | Sky blue | No collision | Used for open air, nothing rendered |
+| `1`   | Ground tile | Solid block | Brown `(139, 69, 19)` | Solid | Player stands/walks on these |
+| `2`   | Platform tile | Thin platform | Grey `(100, 100, 100)` | Solid | Used for jumping, not ground |
+| `3`   | Visible hazard | Red spikes | Red `(220, 20, 20)` | Deadly | Kills player on contact, clearly visible |
+| `4`   | Invisible hazard | None (transparent) | None | Deadly | Kills player, not visible, for traps |
 
 ## Map Layout Information
 
@@ -19,6 +17,13 @@
 - **Total Map Width**: 2560 pixels (80 × 32)
 - **Total Map Height**: 576 pixels (18 × 32)
 
+## Usage Notes
+
+- Only values listed above are valid in the map CSV files.
+- Hazards (`3` and `4`) instantly kill the player.
+- Platforms (`2`) are for jumping, not for walking on ground level.
+- Empty tiles (`0`) are not rendered and have no collision.
+
 ## Usage Guidelines
 
 ### Ground Tiles (Type 1 - Brown)
@@ -26,11 +31,10 @@
 - Typically placed in the bottom rows (15-17)
 - Should form continuous surfaces for running
 
-### Platform Tiles (Types 2 & 3 - Grey)
+### Platform Tiles (Type 2 - Grey)
 - Use for floating platforms that players can jump on
 - Can be placed anywhere in the air
-- Types 2 and 3 are functionally identical (both grey, both solid)
-- Use different numbers to distinguish platform groups if needed
+- Only one platform tile type is used (2)
 
 ### Hazard Tiles (Types 4 & 5 - DEADLY)
 - **Type 4 - Visible Hazards**: Red spikes that are clearly visible to players
