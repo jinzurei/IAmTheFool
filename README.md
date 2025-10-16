@@ -20,7 +20,7 @@ All logic is built in modules:
 ```bash
 entities/      # game objects like Player, Obstacle, Ground
 core/          # settings, main game loop, utils
-assets/        # (placeholder now, future sprite-ready)
+assets/
 ```
 
 ---

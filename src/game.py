@@ -35,42 +35,35 @@ class Game:
         self.scene_width = 0
         self.loop_offset = 0  # How many times we've looped
         
-        # Find spawn tile in map
+        # Find spawn tile in map (value '5')
         spawn_pos = None
-        layout_path = f"src/scenes/scene_1/map.csv"
+        layout_path = f"src/scenes/scene_1/testmap.csv"
         layout = load_csv_layout(layout_path)
         spawn_col = None
         spawn_row = None
         for row_idx, row in enumerate(layout):
             for col_idx, cell in enumerate(row):
-                if cell == '9':
+                if cell == '5':
                     spawn_col = col_idx
                     spawn_row = row_idx
                     break
             if spawn_col is not None:
                 break
         if spawn_col is not None:
-            # Ensure the spawn tile is directly above a ground tile
-            ground_row = spawn_row + 1
-            if ground_row >= len(layout) or layout[ground_row][spawn_col] != '1':
-                raise Exception("Spawn tile must be directly above a ground tile.")
-            # Place player one tile above the spawn tile
-            spawn_pos = (spawn_col * TILE_SIZE, spawn_row * TILE_SIZE - PLAYER_HEIGHT)
+            # Place player directly on the spawn tile
+            spawn_pos = (spawn_col * TILE_SIZE, spawn_row * TILE_SIZE)
         else:
             spawn_pos = (100, 300)  # fallback
         self.player = Player(spawn_pos, [self.camera_group])
         
         # Load scene
-        self.load_scene('scene_1')
+        self.load_scene()
         
-    def load_scene(self, scene_name):
-        """Load a scene from CSV tilemap data and store for infinite looping"""
-        # Load CSV layout
-        layout_path = f"src/scenes/{scene_name}/map.csv"
+    def load_scene(self):
+        """Load only scene_1 from CSV tilemap data and store for infinite looping"""
+        layout_path = "src/scenes/scene_1/testmap.csv"
         self.scene_layout = load_csv_layout(layout_path)
         self.scene_width = len(self.scene_layout[0]) * TILE_SIZE if self.scene_layout else 0
-        
-        # Build initial tiles
         self.build_tiles()
         
     def build_tiles(self):
@@ -83,13 +76,14 @@ class Game:
         # Re-add player to camera group
         self.camera_group.add(self.player)
         
-        # Define tile colors (can be replaced with textures later)
+    # Define tile colors
         tile_colors = {
-            0: None,
-            1: (139, 69, 19),   # Brown (ground)
-            2: (100, 100, 100), # Grey (platforms)
-            3: (100, 100, 100), # Grey (platforms)
-            9: (255, 215, 0)    # Gold/yellow for spawn tile
+            0: None,                # Empty space
+            1: (139, 69, 19),      # Ground tile
+            2: (100, 100, 100),    # Platform tile
+            3: (220, 20, 20),      # Visible hazard (red)
+            4: (128, 128, 128),    # Invisible hazard (grey, not rendered)
+            5: (255, 215, 0)       # Player spawnpoint (gold/yellow)
         }
         
         # Calculate how many screen widths to build (build extra for smooth scrolling)
@@ -106,24 +100,36 @@ class Game:
                 
                 y = row_index * TILE_SIZE
                 
-                tile_value = int(cell) if cell != '-1' else 0
-                if tile_value == 9:
-                    # Spawn tile, draw it but don't add collision
+                # Treat empty string and '-1' as 0 (empty space)
+                if cell == '' or cell == '-1':
+                    tile_value = 0
+                else:
+                    tile_value = int(cell)
+                if tile_value == 5:
+                    # Player spawnpoint, draw it but don't add collision
                     color = tile_colors[tile_value]
                     surface = pygame.Surface((TILE_SIZE, TILE_SIZE))
                     surface.fill(color)
                     pygame.draw.rect(surface, BLACK, surface.get_rect(), 2)
                     tile = StaticTile((world_x, y), [self.camera_group], surface)  # No collision group
-                elif tile_value > 0 and tile_value in tile_colors:
+                elif tile_value == 4:
+                    # Invisible hazard
+                    hazard = InvisibleHazard((world_x, y), [self.hazards])
+                elif tile_value == 3:
+                    # Visible hazard
+                    color = tile_colors[tile_value]
+                    surface = pygame.Surface((TILE_SIZE, TILE_SIZE))
+                    surface.fill(color)
+                    pygame.draw.rect(surface, BLACK, surface.get_rect(), 2)
+                    hazard = VisibleHazard((world_x, y), [self.camera_group, self.hazards])
+                elif tile_value == 2 or tile_value == 1:
+                    # Platform or ground tile
                     color = tile_colors[tile_value]
                     surface = pygame.Surface((TILE_SIZE, TILE_SIZE))
                     surface.fill(color)
                     pygame.draw.rect(surface, BLACK, surface.get_rect(), 2)
                     tile = StaticTile((world_x, y), [self.camera_group, self.tiles], surface)
-                elif tile_value == 4:  # Visible hazard
-                    hazard = VisibleHazard((world_x, y), [self.camera_group, self.hazards])
-                elif tile_value == 5:  # Invisible hazard
-                    hazard = InvisibleHazard((world_x, y), [self.hazards])
+                # 0 is empty space, do nothing
     
     def update_tiles(self):
         """Update tiles based on player position for infinite scrolling"""

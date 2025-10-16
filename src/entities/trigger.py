@@ -2,7 +2,7 @@ import pygame
 from src.config.settings import TILE_SIZE
 
 class Trigger(pygame.sprite.Sprite):
-    # Trigger or item entity with midbottom anchor and debug draw
+
     def __init__(self, pos, image=None):
         super().__init__()
         self.image = image if image is not None else pygame.Surface((TILE_SIZE, TILE_SIZE))
@@ -21,5 +21,4 @@ class Trigger(pygame.sprite.Sprite):
             off = pygame.Vector2(0, 0)
         draw_pos = (self.rect.x - off.x, self.rect.y - off.y)
         screen.blit(self.image, draw_pos)
-        debug_rect = pygame.Rect(draw_pos, self.rect.size)
-        pygame.draw.rect(screen, (255, 140, 0), debug_rect, 2)
+

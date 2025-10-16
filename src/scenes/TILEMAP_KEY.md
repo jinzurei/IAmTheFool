@@ -2,14 +2,14 @@
 
 ## Tile Values and Their Meanings
 
-| Value | Description | Visual | Color | Collision | Notes |
+| Value | Description | Visual | Color | Collision |
 |-------|-------------|--------|-------|-----------|-------|
-| `0`   | Empty space | Sky/Background | Sky blue | No collision | Used for open air, nothing rendered |
-| `1`   | Ground tile | Solid block | Brown `(139, 69, 19)` | Solid | Player stands/walks on these |
-| `2`   | Platform tile | Thin platform | Grey `(100, 100, 100)` | Solid | Used for jumping, not ground |
-| `3`   | Visible hazard | Red spikes | Red `(220, 20, 20)` | Deadly | Kills player on contact, clearly visible |
-| `4`   | Invisible hazard | None (transparent) | None | Deadly | Kills player, not visible, for traps |
-| `5`   | Spawn tile | Yellow square | Yellow `(255, 255, 0)` | No collision | Player spawns here |
+| `0`   | Empty space | Sky/Background | Sky blue | No collision |
+| `1`   | Ground tile | Solid block | Brown `(139, 69, 19)` | Solid |
+| `2`   | Platform tile | Thin platform | Grey `(100, 100, 100)` | Solid |
+| `3`   | Visible hazard | Red spikes | Red `(220, 20, 20)` | Deadly |
+| `4`   | Invisible hazard | None (transparent) | None | Deadly |
+| `5`   | Spawn tile | Yellow square | Yellow `(255, 255, 0)` | No collision |
 
 ## Map Layout Information
 
@@ -18,16 +18,6 @@
 - **Total Map Width**: 2560 pixels (80 × 32)
 - **Total Map Height**: 576 pixels (18 × 32)
 
-## Usage Notes
-
-- Only values listed above are valid in the map CSV files.
-- Hazards (`3` and `4`) instantly kill the player.
-- Platforms (`2`) are for jumping, not for walking on ground level.
-- Empty tiles (`0`) are not rendered and have no collision.
-
-## Usage Guidelines
-
-### Ground Tiles (Type 1 - Brown)
 - Use for the main ground/floor that the player runs on
 - Typically placed in the bottom rows (15-17)
 - Should form continuous surfaces for running

@@ -9,7 +9,7 @@ TILE_SIZE = 32
 ## Utility functions world_to_tile, tile_to_world, move_and_collide_rect are defined in core/collision.py and should be imported if needed
 
 class Player(pygame.sprite.Sprite):
-    # ...existing code...
+
 
     def _rescale_draw_image_to_collider(self, pad=PLAYER_PAD):
         rect = self.rect
@@ -71,14 +71,13 @@ class Player(pygame.sprite.Sprite):
 
     def draw(self, screen, off=None):
         """
-        Draw the player sprite and green collider debug rectangle using the camera offset.
-        The offset is provided by the camera group for render-physics alignment.
+        Draw the player sprite using the camera offset, and draw a green collision box for debugging.
         """
         if off is None:
             off = pygame.Vector2(0, 0)
         draw_pos = pygame.Vector2(self.rect.topleft) + self._draw_offset - off
         screen.blit(self._draw_image, draw_pos)
-        # Green debug rect for collider
+        # Draw green collision box
         debug_rect = pygame.Rect(self.rect.x - off.x, self.rect.y - off.y, self.rect.width, self.rect.height)
         pygame.draw.rect(screen, (0, 255, 0), debug_rect, 2)
 

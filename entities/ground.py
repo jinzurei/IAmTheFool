@@ -11,7 +11,7 @@ class Ground(ScrollableEntity):
         # Make ground segments wider to handle camera movement
         super().__init__(settings.SCREEN_WIDTH * 2, settings.GROUND_HEIGHT, ground_y)
 
-        # Placeholder themes: can later become images/textures
+    # Themes: can later become images/textures
         self.colors = settings.GROUND_COLORS
         self.current_color_index = 0
         self.color = self.colors[self.current_color_index]

@@ -3,7 +3,7 @@ Credits
 
 Player Character Asset
 ---------------------
-The placeholder player character sprite is from:
+The player character sprite is from:
 https://penusbmic.itch.io/character-pack-3
 
 Asset by: penusbmic

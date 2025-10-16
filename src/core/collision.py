@@ -31,7 +31,7 @@ def move_and_collide_rect(rect, vx, vy, is_solid_tile):
                 ty = top
                 if is_solid_tile(tx, ty):
                     rect.top = tile_to_world(tx, ty)[1] + TILE
-    # ...existing code...
+
     rect.x += vx
     if vx != 0:
         left, top = world_to_tile(rect.left, rect.top)
