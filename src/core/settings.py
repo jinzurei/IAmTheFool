@@ -29,10 +29,13 @@ PLAYER_WIDTH = 400  # Comically wide for extreme effect
 PLAYER_HEIGHT = 128  # Less tall, matches sprite aspect ratio
 PLAYER_COLLISION_WIDTH = 50  # Reasonable collision box width
 PLAYER_COLLISION_HEIGHT = 100  # Reasonable collision box height
-RUN_SPEED = 4
-JUMP_SPEED = -16
-GRAVITY = 0.8
-MAX_FALL_SPEED = 15
+RUN_SPEED = 4 # Horizontal movement speed
+JUMP_SPEED = -15 # Initial upward velocity when jumping
+GRAVITY = 0.7 # Downward acceleration
+MAX_FALL_SPEED = 15 # Terminal velocity
+# Variable jump controls
+MIN_JUMP_SPEED = -10  # upward velocity applied for short taps
+JUMP_HOLD_TIME = 0.55  # seconds the jump can be held to extend jump
 
 # ================================
 # CONTROLS

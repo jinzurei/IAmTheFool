@@ -67,6 +67,9 @@ class Player(pygame.sprite.Sprite):
         self.vel_y = 0
         self.on_ground = False
         self.is_alive = True
+        # Variable jump state
+        self.jump_held = False
+        self.jump_hold_time = 0.0
         self.spawn_midbottom = pos
 
     def draw(self, screen, off=None):
@@ -89,15 +92,39 @@ class Player(pygame.sprite.Sprite):
             self.vel_x = RUN_SPEED + 2
         else:
             self.vel_x = RUN_SPEED
-        if any(keys[key] for key in JUMP_KEYS) and self.on_ground:
+        jump_pressed = any(keys[key] for key in JUMP_KEYS)
+        if jump_pressed and self.on_ground:
+            # start jump at max jump speed and begin hold tracking
             self.vel_y = JUMP_SPEED
             self.on_ground = False
+            self.jump_held = True
+            self.jump_hold_time = 0.0
+        elif not jump_pressed and self.jump_held:
+            # key released early: stop holding and clamp to minimum jump if necessary
+            self.jump_held = False
+            if self.vel_y < MIN_JUMP_SPEED:
+                self.vel_y = MIN_JUMP_SPEED
 
     def update(self, dt, tiles, hazards=None):
         if not self.is_alive:
             return
         self.handle_input()
-        self.vel_y += GRAVITY
+        # dt is passed in milliseconds from the game loop
+        dt_seconds = dt / 1000.0 if dt is not None else 0
+
+        # While the jump button is held and within hold time, use reduced gravity to allow higher jump
+        if self.jump_held:
+            self.jump_hold_time += dt_seconds
+            if self.jump_hold_time < JUMP_HOLD_TIME:
+                gravity_effect = GRAVITY * 0.35
+            else:
+                # hold window expired
+                self.jump_held = False
+                gravity_effect = GRAVITY
+        else:
+            gravity_effect = GRAVITY
+
+        self.vel_y += gravity_effect
         if self.vel_y > MAX_FALL_SPEED:
             self.vel_y = MAX_FALL_SPEED
         # Move horizontally
