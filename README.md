@@ -18,9 +18,58 @@ Built from scratch as a personal milestone after two semesters back in school.
 
 All logic is built in modules:
 ```bash
-entities/      # game objects like Player, Obstacle, Ground
-core/          # settings, main game loop, utils
-assets/
+IAmTheFool/
+├── assets/                           # art, sound, and other media assets
+│
+├── src/
+│   ├── config/                       # game-wide configuration values
+│   │   └── settings.py               # display, FPS, and runtime setup
+│   │
+│   ├── core/                         # low-level engine logic and constants
+│   │   ├── camera.py
+│   │   ├── collision.py
+│   │   ├── constants.py
+│   │   ├── settings.py               # physics + movement constants
+│   │   ├── sprite_align.py
+│   │   └── support.py
+│   │
+│   ├── entities/                     # game entities and components
+│   │   ├── enemies/
+│   │   │   ├── __init__.py
+│   │   │   ├── enemy.py
+│   │   │   ├── mask.py
+│   │   │   └── sprite.py
+│   │   ├── hazard.py
+│   │   ├── player.py
+│   │   ├── tile.py
+│   │   └── trigger.py
+│   │
+│   ├── game/                         # main game orchestration
+│   │   ├── engine.py
+│   │   ├── game.py
+│   │   └── main.py
+│   │
+│   ├── scenes/                       # map CSVs and level scripts
+│   │   ├── scene_1/
+│   │   │   └── testmap.csv
+│   │   ├── scene_2/
+│   │   │   └── testmap.csv
+│   │   ├── scene_3/
+│   │   │   └── testmap.csv
+│   │   └── TILEMAP_KEY.md
+│   │
+│   ├── systems/                      # engine subsystems (camera, physics, etc.)
+│   │   └── camera.py
+│   │
+│   └── ui/                           # user interface and screens
+│       └── death_screen.py
+│
+├── main.py                           # top-level launcher
+├── LICENSE
+├── README.md
+├── CONTRIBUTING.md
+├── CREDITS.md
+└── .gitignore
 ```
 
 ---
