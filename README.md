@@ -14,7 +14,7 @@ Built from scratch as a personal milestone after two semesters back in school.
 - 🌀 Parallax background and scrolling ground
 - 🧍‍♂️ Player controls with WASD and dash physics
 - 💥 Collision detection
-- 🗺️ Region transitions every 2000px (theme cycling)
+- 🗺️ Region transitions
 
 All logic is built in modules:
 ```bash
