@@ -1,8 +1,10 @@
 import pygame
-from core import settings
+import settings
+
 
 class Obstacle:
     """Obstacle entity that moves across the screen."""
+
     def __init__(self, start_x: float = None) -> None:
         """Initialize the obstacle at the specified position or right edge."""
         self.width = settings.OBSTACLE_WIDTH
@@ -23,17 +25,19 @@ class Obstacle:
         """Draw the obstacle with enhanced visuals."""
         # Main body
         pygame.draw.rect(surface, self.color, (self.x, self.y, self.width, self.height))
-        
+
         # Danger stripes pattern
         stripe_color = (255, 255, 0)  # Yellow warning stripes
         for i in range(0, self.height, 8):
             if (i // 8) % 2 == 0:
                 stripe_rect = (self.x + 2, self.y + i, self.width - 4, 4)
                 pygame.draw.rect(surface, stripe_color, stripe_rect)
-        
+
         # Dark outline
-        pygame.draw.rect(surface, settings.BLACK, (self.x, self.y, self.width, self.height), 2)
-        
+        pygame.draw.rect(
+            surface, settings.BLACK, (self.x, self.y, self.width, self.height), 2
+        )
+
     def get_rect(self) -> pygame.Rect:
         """Get the obstacle's bounding rectangle for collision detection."""
         return pygame.Rect(self.x, self.y, self.width, self.height)

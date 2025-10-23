@@ -1,18 +1,22 @@
 import pygame
-from src.config import settings
+from src import settings
 from src.core.camera import YSortCameraGroup, CameraLookAhead
 from src.entities.player import Player
-from src.entities.tile import StaticTile, SpawnTile
+from src.entities.tile import SpawnTile
+
 
 class Game:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT), pygame.RESIZABLE)
+        self.screen = pygame.display.set_mode(
+            (settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT), pygame.RESIZABLE
+        )
         pygame.display.set_caption("I Am The Fool")
         self.clock = pygame.time.Clock()
         self.running = True
         self.font = pygame.font.SysFont(None, 36)
-        self.game_state = settings.MENU
+        # Use a simple string-based state; settings.MENU was removed/absent.
+        self.game_state = "menu"
         self.camera = YSortCameraGroup()
         self.cam_lookahead = CameraLookAhead()
         self.obstacles = []
@@ -24,17 +28,22 @@ class Game:
 
         # Load map and find spawn tile
         from src.core.support import load_csv_layout
+
         map_layout = load_csv_layout("src/scenes/scene_1/map.csv")
         spawn_pos = None
         for row_idx, row in enumerate(map_layout):
             for col_idx, val in enumerate(row):
-                if val == '5':
-                    spawn_pos = (col_idx * settings.TILE_SIZE, row_idx * settings.TILE_SIZE)
+                if val == "5":
+                    spawn_pos = (
+                        col_idx * settings.TILE_SIZE,
+                        row_idx * settings.TILE_SIZE,
+                    )
                     # Optionally add the SpawnTile to obstacles for rendering
                     self.obstacles.append(SpawnTile(spawn_pos, []))
         if spawn_pos is None:
             spawn_pos = (100, 300)  # fallback default
         self.player = Player(spawn_pos, [])
+
     def run(self):
         dt = 0
         while self.running:
@@ -53,15 +62,22 @@ class Game:
             self.cam_lookahead.update(self.player.rect.center, dt)
             self.draw()
             dt = self.clock.tick(60) / 1000.0
+
     def draw(self):
         self.screen.fill(settings.BLUE)
-        cam_offset = (int(self.cam_lookahead.offset.x), int(self.cam_lookahead.offset.y))
+        cam_offset = (
+            int(self.cam_lookahead.offset.x),
+            int(self.cam_lookahead.offset.y),
+        )
         self.player.draw(self.screen, camera_offset=cam_offset)
         for obstacle in self.obstacles:
-            if hasattr(obstacle, 'draw'):
+            if hasattr(obstacle, "draw"):
                 obstacle.draw(self.screen, camera_offset=cam_offset)
             else:
-                self.screen.blit(obstacle.image, obstacle.rect.move(-cam_offset[0], -cam_offset[1]))
+                self.screen.blit(
+                    obstacle.image, obstacle.rect.move(-cam_offset[0], -cam_offset[1])
+                )
+
     def handle_events(self, events, keys):
         for event in events:
             if event.type == pygame.QUIT:

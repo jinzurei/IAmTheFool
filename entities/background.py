@@ -1,15 +1,18 @@
 import pygame
-from typing import List, Tuple
-from src.core import settings
+import settings
+
+
 from entities.scrollable import ScrollableEntity
+
 
 class Background(ScrollableEntity):
     """Scrolling background with multiple region themes."""
+
     def __init__(self) -> None:
         """Initialize the scrolling background with segments for camera."""
         # Make background segments wider to handle camera movement
         super().__init__(settings.SCREEN_WIDTH * 2, settings.SCREEN_HEIGHT, 0)
-        
+
         self.colors = settings.BACKGROUND_COLORS
         self.color_index = 0
         self.color1 = self.colors[self.color_index]
@@ -22,8 +25,21 @@ class Background(ScrollableEntity):
         """
         if camera_offset is None:
             camera_offset = (0, 0)
-        pygame.draw.rect(surface, self.color1, (self.x1 - camera_offset[0], 0 - camera_offset[1], self.width, self.height))
-        pygame.draw.rect(surface, self.color2, (self.x2 - camera_offset[0], 0 - camera_offset[1], self.width, self.height))
+        # Break long rect calls into variables to satisfy line-length checks
+        rect1 = (
+            self.x1 - camera_offset[0],
+            0 - camera_offset[1],
+            self.width,
+            self.height,
+        )
+        rect2 = (
+            self.x2 - camera_offset[0],
+            0 - camera_offset[1],
+            self.width,
+            self.height,
+        )
+        pygame.draw.rect(surface, self.color1, rect1)
+        pygame.draw.rect(surface, self.color2, rect2)
 
     def set_region(self, index: int) -> None:
         """Set the background region/theme based on index."""
