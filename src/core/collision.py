@@ -1,9 +1,14 @@
-import pygame
-TILE = 32
+from src.settings import TILE_SIZE
+
+
 def world_to_tile(x, y):
-    return x // TILE, y // TILE
+    return x // TILE_SIZE, y // TILE_SIZE
+
+
 def tile_to_world(tx, ty):
-    return tx * TILE, ty * TILE
+    return tx * TILE_SIZE, ty * TILE_SIZE
+
+
 def move_and_collide_rect(rect, vx, vy, is_solid_tile):
     rect.x += vx
     if vx != 0:
@@ -17,7 +22,7 @@ def move_and_collide_rect(rect, vx, vy, is_solid_tile):
             else:
                 tx = left
                 if is_solid_tile(tx, ty):
-                    rect.left = tile_to_world(tx, ty)[0] + TILE
+                    rect.left = tile_to_world(tx, ty)[0] + TILE_SIZE
     rect.y += vy
     if vy != 0:
         left, top = world_to_tile(rect.left, rect.top)
@@ -30,7 +35,7 @@ def move_and_collide_rect(rect, vx, vy, is_solid_tile):
             else:
                 ty = top
                 if is_solid_tile(tx, ty):
-                    rect.top = tile_to_world(tx, ty)[1] + TILE
+                    rect.top = tile_to_world(tx, ty)[1] + TILE_SIZE
 
     rect.x += vx
     if vx != 0:

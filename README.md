@@ -92,7 +92,23 @@ Please see [`CONTRIBUTING.md`](./CONTRIBUTING.md) before engaging.
 
 ---
 
-## 🚧 Roadmap Ideas (not guaranteed)
+## � Development notes
+
+The repository-level flake8 configuration has been placed in `tests/.flake8` for local tooling
+consistency with the project's test setup. If you run linters locally, please ensure your
+editor or CI picks up `tests/.flake8` (or move it back to the repo root if you prefer a global
+config file).
+
+To run the project's flake8 consistently from the repo root, use the provided PowerShell
+wrapper script:
+
+	./scripts/run_flake8.ps1
+
+This script invokes flake8 with the `tests/.flake8` config so contributors running the
+script and CI run the same checks.
+
+
+## �🚧 Roadmap Ideas (not guaranteed)
 
 - Sprite animations for player
 - Thematic backgrounds per region

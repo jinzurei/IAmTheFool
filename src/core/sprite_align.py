@@ -1,5 +1,7 @@
 import pygame
-def align_frame_to_midbottom(frame, canvas_size=(48,48)):
+
+
+def align_frame_to_midbottom(frame, canvas_size=(48, 48)):
     bbox = frame.get_bounding_rect()
     cropped = frame.subsurface(bbox).copy()
     canvas = pygame.Surface(canvas_size, pygame.SRCALPHA)

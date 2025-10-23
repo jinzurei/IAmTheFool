@@ -1,5 +1,6 @@
 import pygame
-from src.config.settings import TILE_SIZE
+from src.settings import TILE_SIZE
+
 
 class Tile(pygame.sprite.Sprite):
     # Base tile class
@@ -14,6 +15,7 @@ class StaticTile(Tile):
     def __init__(self, pos, groups, surface):
         super().__init__(pos, groups)
         self.image = surface
+
 
 class SpawnTile(Tile):
     # Yellow tile for player spawn
