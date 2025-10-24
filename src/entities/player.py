@@ -10,10 +10,13 @@ from src.settings import (
     RIGHT_KEYS,
     JUMP_KEYS,
     JUMP_SPEED,
-    MIN_JUMP_SPEED,
-    JUMP_HOLD_TIME,
     GRAVITY,
     MAX_FALL_SPEED,
+    FALL_MULTIPLIER,
+    LOW_JUMP_MULTIPLIER,
+    COYOTE_TIME,
+    JUMP_BUFFER,
+    JUMP_HOLD_TIME,
 )
 
 # Utility functions world_to_tile, tile_to_world, move_and_collide_rect are
@@ -138,13 +141,21 @@ class Player(pygame.sprite.Sprite):
         self._draw_image = self.image
         self._draw_offset = pygame.Vector2(0, 0)
         self._rescale_draw_image_to_collider()
-        self.vel_x = RUN_SPEED
-        self.vel_y = 0
+        # Position as float vector for sub-pixel movement (tied to rect)
+        self.pos = pygame.Vector2(self.rect.topleft)
+        # Velocities are in px/s (time-based physics)
+        self.vel_x = 0.0
+        self.vel_y = 0.0
         self.on_ground = False
         self.is_alive = True
         # Variable jump state
         self.jump_held = False
         self.jump_hold_time = 0.0
+        # Input / timing helpers (seconds)
+        self.time_since_grounded = 0.0
+        self.time_since_jump_pressed = 999.0
+        self.time_holding_jump = 0.0
+        self.prev_jump_pressed = False
         self.spawn_midbottom = pos
 
     def draw(self, screen, off=None):
@@ -164,61 +175,107 @@ class Player(pygame.sprite.Sprite):
         pygame.draw.rect(screen, (0, 255, 0), debug_rect, 2)
 
     def handle_input(self):
+        # Deprecated: input handling is performed in update(dt, ...)
+        return
+
+    def update(self, dt, tiles, hazards=None):
+        """Update player state using time-based physics.
+
+        dt: seconds since last frame (float). Uses semi-implicit Euler:
+          v += a * dt
+          x += v * dt
+        """
+        if not self.is_alive:
+            return
+
+        # Guard dt
+        if dt is None:
+            return
+
+        # Input polling and edge detection
         keys = pygame.key.get_pressed()
-        if any(keys[key] for key in LEFT_KEYS):
-            self.vel_x = RUN_SPEED - 2
-        elif any(keys[key] for key in RIGHT_KEYS):
-            self.vel_x = RUN_SPEED + 2
+        left = any(keys[k] for k in LEFT_KEYS)
+        right = any(keys[k] for k in RIGHT_KEYS)
+        jump_pressed = any(keys[k] for k in JUMP_KEYS)
+
+        # Jump press edge -> buffer the press
+        if jump_pressed and not self.prev_jump_pressed:
+            self.time_since_jump_pressed = 0.0
+        self.prev_jump_pressed = jump_pressed
+
+        # Update timing helpers
+        if self.on_ground:
+            self.time_since_grounded = 0.0
         else:
-            self.vel_x = RUN_SPEED
-        jump_pressed = any(keys[key] for key in JUMP_KEYS)
-        if jump_pressed and self.on_ground:
-            # start jump at max jump speed and begin hold tracking
+            self.time_since_grounded += dt
+
+        if self.time_since_jump_pressed < 999.0:
+            self.time_since_jump_pressed += dt
+
+        # Horizontal velocity: immediate target speed (no accel provided)
+        direction = 0
+        if left:
+            direction = -1
+        elif right:
+            direction = 1
+        self.vel_x = RUN_SPEED * direction
+
+        # Jump triggering (coyote + buffer)
+        can_use_coyote = self.time_since_grounded <= COYOTE_TIME
+        buffered_jump = self.time_since_jump_pressed <= JUMP_BUFFER
+        if (self.on_ground or can_use_coyote) and buffered_jump:
+            # Perform jump
             self.vel_y = JUMP_SPEED
             self.on_ground = False
             self.jump_held = True
-            self.jump_hold_time = 0.0
-        elif not jump_pressed and self.jump_held:
-            # key released early: stop holding and clamp to minimum jump if necessary
-            self.jump_held = False
-            if self.vel_y < MIN_JUMP_SPEED:
-                self.vel_y = MIN_JUMP_SPEED
+            self.time_holding_jump = 0.0
+            # consume buffer
+            self.time_since_jump_pressed = 999.0
 
-    def update(self, dt, tiles, hazards=None):
-        if not self.is_alive:
-            return
-        self.handle_input()
-        # dt is passed in milliseconds from the game loop
-        dt_seconds = dt / 1000.0 if dt is not None else 0
-
-    # While the jump button is held and within the hold time window, use
-    # reduced gravity so the player can reach a higher jump.
-        if self.jump_held:
-            self.jump_hold_time += dt_seconds
-            if self.jump_hold_time < JUMP_HOLD_TIME:
-                gravity_effect = GRAVITY * 0.35
-            else:
-                # hold window expired
-                self.jump_held = False
-                gravity_effect = GRAVITY
+        # Update jump holding timer
+        if self.jump_held and jump_pressed:
+            self.time_holding_jump += dt
         else:
-            gravity_effect = GRAVITY
+            self.jump_held = False
 
-        self.vel_y += gravity_effect
+        # Gravity multipliers and semi-implicit Euler integration
+        if self.vel_y < 0:  # rising
+            if self.jump_held and self.time_holding_jump < JUMP_HOLD_TIME:
+                g_eff = GRAVITY
+            else:
+                g_eff = GRAVITY * LOW_JUMP_MULTIPLIER
+        elif self.vel_y > 0:  # falling
+            g_eff = GRAVITY * FALL_MULTIPLIER
+        else:
+            g_eff = GRAVITY
+
+        # Integrate velocity and position (semi-implicit)
+        self.vel_y += g_eff * dt
+        # Clamp downward velocity only
         if self.vel_y > MAX_FALL_SPEED:
             self.vel_y = MAX_FALL_SPEED
-        # Move horizontally
-        self.rect.x += self.vel_x
+
+        # Move horizontally by vx * dt, resolve collisions
+        self.pos.x += self.vel_x * dt
+        # Sync rect to float position before collision checks
+        self.rect.x = int(round(self.pos.x))
         self.check_horizontal_collision(tiles)
-        # Move vertically
-        self.rect.y += self.vel_y
+        # After collision resolution, sync pos
+        self.pos.x = float(self.rect.x)
+
+        # Move vertically by vy * dt, resolve collisions
+        self.pos.y += self.vel_y * dt
+        self.rect.y = int(round(self.pos.y))
         self.check_vertical_collision(tiles)
-        # Check hazard collision
+        # After collision resolution, sync pos and grounded state
+        self.pos.y = float(self.rect.y)
+
+        # Hazards
         if hazards:
             self.check_hazard_collision(hazards)
-        # Update animation
+
+        # Animation (kept frame-based increment for compatibility)
         self.update_animation()
-        # self.rect is authoritative; no sprite_rect needed
 
     def check_hazard_collision(self, hazards):
         """Check if player touches any hazard and die if so"""
@@ -240,6 +297,13 @@ class Player(pygame.sprite.Sprite):
         self.rect.midbottom = self.spawn_midbottom
         self.vel_x = RUN_SPEED
         self.vel_y = 0
+        # Keep internal float position in sync with the rect so the next
+        # physics update doesn't overwrite the respawn placement.
+        try:
+            self.pos = pygame.Vector2(self.rect.topleft)
+        except Exception:
+            # Older codepaths may not have self.pos; ignore if missing.
+            pass
         self.on_ground = True
         self.is_alive = True
         self.frame_index = 0

@@ -50,10 +50,14 @@ def try_import(path: Path, repo_root: Path, idx: int):
         return
     except Exception:
         tb2 = traceback.format_exc()
-        raise ImportError(
+        msg = (
             f"Failed to import {path} (module name '{module_name}').\n"
-            f"Package import error:\n{tb1}\nFile import error:\n{tb2}"
+            "Package import error:\n"
+            f"{tb1}\n"
+            "File import error:\n"
+            f"{tb2}"
         )
+        raise ImportError(msg)
 
 
 def pytest_generate_tests(metafunc):
@@ -64,7 +68,8 @@ def pytest_generate_tests(metafunc):
         sys.path.insert(1, str(repo_root / "src"))
         files = sorted(collect_python_files(repo_root))
         ids = [str(p.relative_to(repo_root)) for p in files]
-        metafunc.parametrize("pyfile,idx", list(zip(files, range(1, len(files) + 1))), ids=ids)
+    params = list(zip(files, range(1, len(files) + 1)))
+    metafunc.parametrize("pyfile,idx", params, ids=ids)
 
 
 def test_import_file(pyfile: Path, idx: int):

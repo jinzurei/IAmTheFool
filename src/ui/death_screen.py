@@ -35,16 +35,21 @@ class DeathScreen:
                 self.selected_option = (self.selected_option + 1) % len(self.options)
             elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
                 return self.options[self.selected_option].lower()
-
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:  # Left mouse button
-                mouse_pos = pygame.mouse.get_pos()
+                # Use the event's position (more accurate) and compute
+                # button rects on demand if draw() hasn't run yet this frame.
+                mouse_pos = getattr(event, "pos", pygame.mouse.get_pos())
+                if not self.button_rects:
+                    self._compute_button_rects()
                 for i, rect in enumerate(self.button_rects):
                     if rect.collidepoint(mouse_pos):
                         return self.options[i].lower()
 
         elif event.type == pygame.MOUSEMOTION:
-            mouse_pos = pygame.mouse.get_pos()
+            mouse_pos = getattr(event, "pos", pygame.mouse.get_pos())
+            if not self.button_rects:
+                self._compute_button_rects()
             for i, rect in enumerate(self.button_rects):
                 if rect.collidepoint(mouse_pos):
                     self.selected_option = i
@@ -91,3 +96,20 @@ class DeathScreen:
                 pygame.draw.rect(self.screen, (50, 50, 50), button_rect, 2)
 
             self.screen.blit(option_text, option_rect)
+
+    def _compute_button_rects(self):
+        """Compute `button_rects` using current fonts and layout.
+
+        This allows input handling to work even when events are processed
+        before draw() is called in the frame loop.
+        """
+        self.button_rects = []
+        for i, option in enumerate(self.options):
+            option_text = self.font_medium.render(option, True, self.text_color)
+            option_rect = option_text.get_rect(
+                center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + i * 60)
+            )
+            button_rect = pygame.Rect(
+                option_rect.centerx - 100, option_rect.centery - 30, 200, 60
+            )
+            self.button_rects.append(button_rect)

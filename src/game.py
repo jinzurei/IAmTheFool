@@ -51,10 +51,17 @@ class Game:
             if spawn_col is not None:
                 break
         if spawn_col is not None:
-            # Place player directly on the spawn tile
-            spawn_pos = (spawn_col * TILE_SIZE, spawn_row * TILE_SIZE)
+            # Place player on the spawn tile. Use the tile's mid-bottom so
+            # Player.rect.midbottom aligns with the tile bottom edge.
+            spawn_pos = (
+                spawn_col * TILE_SIZE + TILE_SIZE // 2,
+                spawn_row * TILE_SIZE + TILE_SIZE,
+            )
         else:
             spawn_pos = (100, 300)  # fallback
+        # Save canonical spawn point (midbottom) so we can reliably
+        # respawn the player later.
+        self.spawn_midbottom = spawn_pos
         self.player = Player(spawn_pos, [self.camera_group])
 
         # Load scene
@@ -147,7 +154,10 @@ class Game:
     def run(self):
         """Main game loop"""
         while True:
-            dt = self.clock.tick(FPS)
+            # Compute dt in seconds and clamp to avoid instability on stalls
+            dt_ms = self.clock.tick(FPS)
+            dt = dt_ms / 1000.0
+            dt = min(dt, 1.0 / 30.0)
 
             # Handle events
             for event in pygame.event.get():
@@ -170,7 +180,7 @@ class Game:
 
             # Update game based on state
             if self.game_state == "playing":
-                # Update player and check for death
+                # Update player (dt in seconds) and check for death
                 self.player.update(dt, self.tiles, self.hazards)
                 self.update_tiles()  # Update tiles for infinite scrolling
 
@@ -190,6 +200,13 @@ class Game:
 
     def restart_game(self):
         """Restart the game after death"""
+        # Ensure player's spawn point matches the level's spawn and then
+        # respawn. This guards against cases where the player's stored
+        # spawn_midbottom may have been changed at runtime.
+        try:
+            self.player.spawn_midbottom = self.spawn_midbottom
+        except Exception:
+            pass
         self.player.respawn()
         self.game_state = "playing"
         self.build_tiles()  # Rebuild tiles around spawn position

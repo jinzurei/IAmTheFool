@@ -10,7 +10,7 @@ player (added to the camera/group), and runs a basic event/update/draw loop.
 
 import sys
 import pygame
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 
 # Use the real modules under src so imports match the rest of the project
 from src.core.camera import YSortCameraGroup
@@ -60,7 +60,10 @@ class Game:
         - when player dies, show DeathScreen and handle retry/quit
         """
         while True:
-            dt = self.clock.tick(60)
+            # Compute dt in seconds and clamp to avoid instability on stalls
+            dt_ms = self.clock.tick(FPS)
+            dt = dt_ms / 1000.0
+            dt = min(dt, 1.0 / 30.0)  # cap at ~33ms
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -76,8 +79,9 @@ class Game:
                         pygame.quit()
                         sys.exit()
 
-            # Update sprites only while the player is alive; player.update is
-            # implemented as a no-op when dead.
+            # Update sprites (pass dt in seconds). Many sprite.update
+            # implementations accept optional args; Group.update will forward
+            # these to each sprite.update.
             self.all_sprites.update(dt, self.tiles, self.hazards)
 
             # Clear, draw and flip
