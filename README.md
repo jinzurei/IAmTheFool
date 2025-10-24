@@ -18,58 +18,74 @@ Built from scratch as a personal milestone after two semesters back in school.
 
 All logic is built in modules:
 ```bash
-IAmTheFool/
-├── assets/                           # art, sound, and other media assets
+IAmTheFool/                         # Project root
+├── .github/                        # GitHub-specific config (CI/CD, templates)
+│   └── workflows/                  # Automation workflows for GitHub Actions
+│       └── flake8.yml              # Lint job to run flake8 on pushes/PRs
 │
-├── src/
-│   ├── config/                       # game-wide configuration values
-│   │   └── settings.py               # display, FPS, and runtime setup
-│   │
-│   ├── core/                         # low-level engine logic and constants
-│   │   ├── camera.py
-│   │   ├── collision.py
-│   │   ├── constants.py
-│   │   ├── settings.py               # physics + movement constants
-│   │   ├── sprite_align.py
-│   │   └── support.py
-│   │
-│   ├── entities/                     # game entities and components
-│   │   ├── enemies/
-│   │   │   ├── __init__.py
-│   │   │   ├── enemy.py
-│   │   │   ├── mask.py
-│   │   │   └── sprite.py
-│   │   ├── hazard.py
-│   │   ├── player.py
-│   │   ├── tile.py
-│   │   └── trigger.py
-│   │
-│   ├── game/                         # main game orchestration
-│   │   ├── engine.py
-│   │   ├── game.py
-│   │   └── main.py
-│   │
-│   ├── scenes/                       # map CSVs and level scripts
-│   │   ├── scene_1/
-│   │   │   └── testmap.csv
-│   │   ├── scene_2/
-│   │   │   └── testmap.csv
-│   │   ├── scene_3/
-│   │   │   └── testmap.csv
-│   │   └── TILEMAP_KEY.md
-│   │
-│   ├── systems/                      # engine subsystems (camera,physics, etc.)
-│   │   └── camera.py
-│   │
-│   └── ui/                           # user interface and screens
-│       └── death_screen.py
+├── .pytest_cache/                  # Auto-generated pytest cache (safe to ignore/clean)
 │
-├── main.py                           # top-level launcher
-├── LICENSE
-├── README.md
-├── CONTRIBUTING.md
-├── CREDITS.md
-└── .gitignore
+├── assets/                         # Game art, audio, and other media
+│   └── mage.samurai                # Example asset file (placeholder/demo)
+│
+├── entities/                       # Legacy/standalone entity modules outside src (keep or archive)
+│   ├── background.py               # Old background entity implementation
+│   ├── ground.py                   # Old ground platform entity
+│   ├── obstacle.py                 # Old obstacle entity
+│   ├── player.py                   # Old player entity (legacy copy)
+│   └── scrollable.py               # Old scrolling helper/entity
+│
+├── scripts/                        # Utility scripts for local dev/automation
+│   └── run_flake8.ps1              # Windows PowerShell helper to run flake8
+│
+├── src/                            # Main application source (authoritative code)
+│   ├── core/                       # Engine primitives, math, and helpers
+│   │   ├── camera.py               # Camera system + view transforms
+│   │   ├── collision.py            # Collision detection/response routines
+│   │   ├── constants.py            # Shared constants/enums/tunables
+│   │   ├── sprite_align.py         # Utilities to align sprites to hitboxes/tiles
+│   │   └── support.py              # Misc helpers (loading, timing, etc.)
+│   │
+│   ├── entities/                   # Runtime entity/component implementations
+│   │   ├── enemies/                # Enemy subclasses (package directory)
+│   │   ├── hazard.py               # Damage zones / traps
+│   │   ├── player.py               # Active player entity (authoritative)
+│   │   ├── tile.py                 # Tile objects + tile utilities
+│   │   └── trigger.py              # Triggers/volumes for scripted events
+│   │
+│   ├── game/                       # Game orchestration and main loop glue
+│   │   ├── engine.py               # Engine bootstrap, loop, systems wiring
+│   │   └── game.py                 # Game state manager / scene coordination
+│   │
+│   ├── scenes/                     # Level data and scene-specific assets/scripts
+│   │   ├── scene_1/                # Scene 1 data
+│   │   │   └── testmap.csv         # CSV tilemap for scene 1
+│   │   ├── scene_2/                # Scene 2 data
+│   │   │   └── map.csv             # CSV tilemap for scene 2
+│   │   ├── scene_3/                # Scene 3 data
+│   │   │   └── map.csv             # CSV tilemap for scene 3
+│   │   └── TILEMAP_KEY.md          # Documentation for tile IDs / semantics
+│   │
+│   ├── ui/                         # Screens and overlays
+│   │   └── death_screen.py         # Game-over/death UI screen
+│   │
+│   ├── game.py                     # Top-level controller inside src (entry to gameplay code)
+│   └── settings.py                 # The ONE authoritative settings config (display/FPS/physics)
+│
+├── tests/                          # Test suite and test config
+│   ├── .flake8                     # Linting rules used during tests
+│   ├── test_import_every_py.py     # Ensures modules import without errors
+│   └── test_smoke_imports.py       # Basic smoke tests for package integrity
+│
+├── tools/                          # Dev utilities and one-off tools
+│   └── jump_debug.py               # Visual/CLI jump-curve debugger
+│
+├── main.py                         # Repo-root launcher (calls into src/game.py)
+├── CONTRIBUTING.md                 # How to contribute / dev workflow
+├── CREDITS.md                      # Attributions/thanks
+├── LICENSE                         # Project license
+├── README.md                       # Documentation landing page (this file)
+└── .gitignore                      # Files/folders to exclude from git
 ```
 
 ---
