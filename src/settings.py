@@ -1,7 +1,7 @@
 """
 Unified settings for the project.
 
-All project modules should import this module for configuration constants.
+All project modules must import this module for configuration constants.
 """
 
 import pygame
