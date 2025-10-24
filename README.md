@@ -1,20 +1,23 @@
 # I Am the Fool 🎭
 
-A solo game jam project exploring modular game design with **Python** and **Pygame**.
-Built from scratch as a personal milestone after two semesters back in school.
+A personal experiment in code and control — built from the ground up in **Python** and **Pygame**.  
+This project isn’t just a game; it’s a mirror of process, failure, and the art of precision.
 
-> "This is me vs. me — and this time, I came to win."
+> "This is me versus me — the architect and the fool, both fighting to evolve."
 
 ---
 
 ## 🎮 Overview
 
-**I Am the Fool** is a parallax-scrolling endless runner built entirely with rectangles and modular architecture. This prototype is a sandbox to test game development logic, clean structure, and region-based dynamic systems.
+**I Am the Fool** is a modular 2D platformer engine built in Python/Pygame, focused on clean architecture and precise movement physics. It serves as a sandbox for refining motion feel, camera logic, and region-based world design.
 
-- 🌀 Parallax background and scrolling ground
-- 🧍‍♂️ Player controls with WASD and dash physics
-- 💥 Collision detection
-- 🗺️ Region transitions
+### Core Features
+- ⚙️ **Custom Engine:** Separated into `core/`, `entities/`, and `scenes/` for clean modularity and fast iteration.
+- 🧠 **Physics System:** Delta-time–based gravity, coyote time, jump buffering, and variable-height jumps using easing functions.
+- 🧍‍♂️ **Player Controller:** Supports walking, jumping, and dashing with smooth acceleration and grounded detection.
+- 🧱 **Collision Detection:** Axis-based resolution with predictive correction using stored `prev_bottom` and `prev_rect` values.
+- 🌀 **Camera & Parallax:** Camera smoothly follows the player; layered parallax backgrounds create depth.
+- 🌍 **Region Logic:** CSV-defined maps with spawn points and transitions between scenes.
 
 All logic is built in modules:
 ```bash
@@ -123,6 +126,49 @@ wrapper script:
 This script invokes flake8 with the `tests/.flake8` config so contributors running the
 script and CI run the same checks.
 
+### ⚙️ Core Motion (Symplectic / Semi-Implicit Euler, Discrete Time)
+
+The following describes the discrete-time motion model used throughout *I Am the Fool*.  
+Most Pygame examples integrate motion per frame (`pos += vel; vel += g`), which ties physics directly to FPS and can cause drift or instability. This engine instead uses a **symplectic (semi-implicit) Euler** integrator, where velocity is updated first and the new velocity drives position.
+
+The result is stable, frame-rate–independent physics with consistent acceleration, jump arcs, and easing across all frame rates. All forces; gravity, input acceleration, dash impulses, and easing—are expressed in consistent pixel-space units and integrated using Δt = 1/FPS.
+
+Let Δt = 1/FPS (seconds). Positions and velocities are updated at discrete steps n → n+1.
+
+#### Velocity update
+vx_{n+1} = vx_n + a_x^{input}(n)·Δt + v_dash,0 · exp(−k_dash · τ_n)         # dash is a velocity term [px/s]
+vy_{n+1} = vy_n + g · M(n) · Δt                                              # gravity acts only on y
+
+#### Optional easing during ascent (vy_{n+1} < 0)
+vy_{n+1} ← vy_{n+1} · clamp( 1 − k_ease · e(u_n)^{p} , 0 , 1 )
+
+#### Terminal fall speed (positive-down convention)
+vy_{n+1} ← min( vy_{n+1}, V_fall,max )
+
+#### Position update (semi-implicit: uses updated velocity)
+x_{n+1} = x_n + vx_{n+1} · Δt
+y_{n+1} = y_n + vy_{n+1} · Δt
+
+---
+
+**Parameters and units**
+
+- g = 1400 px/s² (downward).
+- M(n) ∈ { 1.0, 1.7, 1.8 } is a piecewise multiplier on gravity (vertical only):
+  - 1.0 while rising with normal hold,
+  - 1.7 (LOW_JUMP_MULTIPLIER) on early release,
+  - 1.8 (FALL_MULTIPLIER) when falling (vy_n ≥ 0).
+- a_x^{input}(n) is horizontal acceleration [px/s²]. In code it’s typically
+  a_x^{input}(n) = (v_target − vx_n) · ACCEL_RATE.
+- v_dash,0 [px/s] is the initial dash velocity contribution; k_dash [1/s] is the decay rate; τ_n [s] is time since dash start.
+- Easing: k_ease = 0.25, p = 1.2, e(·) ∈ {cubic, quint}; u_n ∈ [0,1] is normalized ascent progress.
+  The factor `clamp(…)` is bounded in [0,1] to preserve dimensions and avoid overshoot.
+- V_fall,max = MAX_FALL_SPEED = 2600 px/s.
+- Δt ≈ 1/60 s (for FPS = 60).
+
+**Notes**
+- Scheme is **symplectic (semi-implicit) Euler**: first-order accurate in time, energy-dissipative and stable for platformer kinematics at small Δt.
+- All quantities have consistent units (px, px/s, px/s²). Dash is explicitly a **velocity** term; if modeled as acceleration instead, replace `v_dash,0 · exp(−k_dash · τ_n)` with `[a_dash,0 · exp(−k_dash · τ_n)] · Δt` and set units to px/s².
 
 ## �🚧 Roadmap Ideas (not guaranteed)
 
