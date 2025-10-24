@@ -1,5 +1,5 @@
 import pygame
-from src.settings import TILE_SIZE
+from src import settings
 
 
 class Trigger(pygame.sprite.Sprite):
@@ -7,7 +7,7 @@ class Trigger(pygame.sprite.Sprite):
     def __init__(self, pos, image=None):
         super().__init__()
         self.image = (
-            image if image is not None else pygame.Surface((TILE_SIZE, TILE_SIZE))
+            image if image is not None else pygame.Surface((settings.TILE_SIZE, settings.TILE_SIZE))
         )
         self.rect = self.image.get_rect()
         self.rect.midbottom = pos

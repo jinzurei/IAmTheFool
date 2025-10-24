@@ -8,7 +8,7 @@ repo_root = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root))
 sys.path.insert(1, str(repo_root / 'src'))
 
-from src.settings import JUMP_KEYS
+from src import settings
 from src.entities.player import Player
 
 pygame.init()
@@ -33,7 +33,7 @@ class FakeKeys:
         return iter(())
 
 # Monkeypatch get_pressed to return our fake keys with jump pressed
-pygame.key.get_pressed = lambda: FakeKeys(JUMP_KEYS)
+pygame.key.get_pressed = lambda: FakeKeys(settings.JUMP_KEYS)
 
 # Run a few frames and print state
 for i in range(1, 6):

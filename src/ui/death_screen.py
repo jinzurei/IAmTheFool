@@ -3,7 +3,7 @@ Death screen overlay menu with retry/quit options
 """
 
 import pygame
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, WHITE
+from src import settings
 
 
 class DeathScreen:
@@ -22,7 +22,7 @@ class DeathScreen:
 
         # Colors
         self.overlay_color = (0, 0, 0, 128)  # Semi-transparent black
-        self.text_color = WHITE
+        self.text_color = settings.WHITE
         self.selected_color = (255, 255, 0)  # Yellow for selected option
         self.hover_color = (200, 200, 200)  # Light grey for hover
 
@@ -60,7 +60,7 @@ class DeathScreen:
     def draw(self):
         """Draw the death screen overlay"""
         # Create semi-transparent overlay
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        overlay = pygame.Surface((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT))
         overlay.set_alpha(128)
         overlay.fill((0, 0, 0))
         self.screen.blit(overlay, (0, 0))
@@ -68,7 +68,7 @@ class DeathScreen:
         # Draw "YOU DIED" text
         death_text = self.font_large.render("YOU DIED", True, (220, 20, 20))
         death_rect = death_text.get_rect(
-            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100)
+            center=(settings.SCREEN_WIDTH // 2, settings.SCREEN_HEIGHT // 2 - 100)
         )
         self.screen.blit(death_text, death_rect)
 
@@ -82,7 +82,7 @@ class DeathScreen:
             )
             option_text = self.font_medium.render(option, True, color)
             option_rect = option_text.get_rect(
-                center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + i * 60)
+                center=(settings.SCREEN_WIDTH // 2, settings.SCREEN_HEIGHT // 2 + i * 60)
             )
 
             # Create clickable area (larger than text for easier clicking)
@@ -107,7 +107,7 @@ class DeathScreen:
         for i, option in enumerate(self.options):
             option_text = self.font_medium.render(option, True, self.text_color)
             option_rect = option_text.get_rect(
-                center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + i * 60)
+                center=(settings.SCREEN_WIDTH // 2, settings.SCREEN_HEIGHT // 2 + i * 60)
             )
             button_rect = pygame.Rect(
                 option_rect.centerx - 100, option_rect.centery - 30, 200, 60

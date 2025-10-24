@@ -58,7 +58,7 @@ IAmTheFool/
 │   │   │   └── testmap.csv
 │   │   └── TILEMAP_KEY.md
 │   │
-│   ├── systems/                      # engine subsystems (camera, physics, etc.)
+│   ├── systems/                      # engine subsystems (camera,physics, etc.)
 │   │   └── camera.py
 │   │
 │   └── ui/                           # user interface and screens

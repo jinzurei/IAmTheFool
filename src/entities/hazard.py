@@ -1,5 +1,5 @@
 import pygame
-from src.settings import TILE_SIZE
+from src import settings
 
 
 class HazardTile(pygame.sprite.Sprite):
@@ -18,14 +18,14 @@ class HazardTile(pygame.sprite.Sprite):
 
 class VisibleHazard(HazardTile):
     def __init__(self, pos, groups):
-        surface = pygame.Surface((TILE_SIZE, TILE_SIZE))
+        surface = pygame.Surface((settings.TILE_SIZE, settings.TILE_SIZE))
         surface.fill((220, 20, 20))
         points = [
-            (0, TILE_SIZE),
-            (TILE_SIZE // 4, 0),
-            (TILE_SIZE // 2, TILE_SIZE),
-            (3 * TILE_SIZE // 4, 0),
-            (TILE_SIZE, TILE_SIZE),
+            (0, settings.TILE_SIZE),
+            (settings.TILE_SIZE // 4, 0),
+            (settings.TILE_SIZE // 2, settings.TILE_SIZE),
+            (3 * settings.TILE_SIZE // 4, 0),
+            (settings.TILE_SIZE, settings.TILE_SIZE),
         ]
         pygame.draw.polygon(surface, (180, 0, 0), points)
         super().__init__(pos, groups, surface)
@@ -33,6 +33,6 @@ class VisibleHazard(HazardTile):
 
 class InvisibleHazard(HazardTile):
     def __init__(self, pos, groups):
-        surface = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+        surface = pygame.Surface((settings.TILE_SIZE, settings.TILE_SIZE), pygame.SRCALPHA)
         surface.fill((0, 0, 0, 0))
         super().__init__(pos, groups, surface)

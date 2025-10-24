@@ -4,7 +4,7 @@ Main game class for I Am The Fool - Auto-Runner Platformer
 
 import pygame
 import sys
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE, BLACK, FPS
+from src import settings
 from src.core.support import load_csv_layout
 from src.core.camera import YSortCameraGroup
 from src.entities.player import Player
@@ -18,7 +18,7 @@ class Game:
 
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT))
         pygame.display.set_caption("I Am The Fool")
         self.clock = pygame.time.Clock()
 
@@ -54,8 +54,8 @@ class Game:
             # Place player on the spawn tile. Use the tile's mid-bottom so
             # Player.rect.midbottom aligns with the tile bottom edge.
             spawn_pos = (
-                spawn_col * TILE_SIZE + TILE_SIZE // 2,
-                spawn_row * TILE_SIZE + TILE_SIZE,
+                spawn_col * settings.TILE_SIZE + settings.TILE_SIZE // 2,
+                spawn_row * settings.TILE_SIZE + settings.TILE_SIZE,
             )
         else:
             spawn_pos = (100, 300)  # fallback
@@ -72,7 +72,7 @@ class Game:
         layout_path = "src/scenes/scene_1/testmap.csv"
         self.scene_layout = load_csv_layout(layout_path)
         self.scene_width = (
-            len(self.scene_layout[0]) * TILE_SIZE if self.scene_layout else 0
+            len(self.scene_layout[0]) * settings.TILE_SIZE if self.scene_layout else 0
         )
         self.build_tiles()
 
@@ -97,18 +97,18 @@ class Game:
         }
 
         # Calculate how many screen widths to build (build extra for smooth scrolling)
-        build_width = SCREEN_WIDTH * 3  # Build 3 screen widths worth
+        build_width = settings.SCREEN_WIDTH * 3  # Build 3 screen widths worth
         start_x = max(0, int(self.player.rect.centerx - build_width // 2))
         end_x = start_x + build_width
 
         # Build tiles from layout with looping
         for row_index, row in enumerate(self.scene_layout):
-            for world_x in range(start_x, end_x, TILE_SIZE):
+            for world_x in range(start_x, end_x, settings.TILE_SIZE):
                 # Calculate which column in the original layout this represents
-                col_index = (world_x // TILE_SIZE) % len(row)
+                col_index = (world_x // settings.TILE_SIZE) % len(row)
                 cell = row[col_index]
 
-                y = row_index * TILE_SIZE
+                y = row_index * settings.TILE_SIZE
 
                 # Treat empty string and '-1' as 0 (empty space)
                 if cell == "" or cell == "-1":
@@ -118,9 +118,9 @@ class Game:
                 if tile_value == 5:
                     # Player spawnpoint, draw it but don't add collision
                     color = tile_colors[tile_value]
-                    surface = pygame.Surface((TILE_SIZE, TILE_SIZE))
+                    surface = pygame.Surface((settings.TILE_SIZE, settings.TILE_SIZE))
                     surface.fill(color)
-                    pygame.draw.rect(surface, BLACK, surface.get_rect(), 2)
+                    pygame.draw.rect(surface, settings.BLACK, surface.get_rect(), 2)
                     StaticTile((world_x, y), [self.camera_group], surface)
                 elif tile_value == 4:
                     # Invisible hazard
@@ -128,16 +128,16 @@ class Game:
                 elif tile_value == 3:
                     # Visible hazard
                     color = tile_colors[tile_value]
-                    surface = pygame.Surface((TILE_SIZE, TILE_SIZE))
+                    surface = pygame.Surface((settings.TILE_SIZE, settings.TILE_SIZE))
                     surface.fill(color)
-                    pygame.draw.rect(surface, BLACK, surface.get_rect(), 2)
+                    pygame.draw.rect(surface, settings.BLACK, surface.get_rect(), 2)
                     VisibleHazard((world_x, y), [self.camera_group, self.hazards])
                 elif tile_value == 2 or tile_value == 1:
                     # Platform or ground tile
                     color = tile_colors[tile_value]
-                    surface = pygame.Surface((TILE_SIZE, TILE_SIZE))
+                    surface = pygame.Surface((settings.TILE_SIZE, settings.TILE_SIZE))
                     surface.fill(color)
-                    pygame.draw.rect(surface, BLACK, surface.get_rect(), 2)
+                    pygame.draw.rect(surface, settings.BLACK, surface.get_rect(), 2)
                     StaticTile((world_x, y), [self.camera_group, self.tiles], surface)
                 # 0 is empty space, do nothing
 
@@ -145,7 +145,7 @@ class Game:
         """Update tiles based on player position for infinite scrolling"""
         # Rebuild tiles when player has moved significantly
         if hasattr(self, "_last_build_x"):
-            if abs(self.player.rect.centerx - self._last_build_x) > SCREEN_WIDTH // 2:
+            if abs(self.player.rect.centerx - self._last_build_x) > settings.SCREEN_WIDTH // 2:
                 self.build_tiles()
                 self._last_build_x = self.player.rect.centerx
         else:
@@ -155,7 +155,7 @@ class Game:
         """Main game loop"""
         while True:
             # Compute dt in seconds and clamp to avoid instability on stalls
-            dt_ms = self.clock.tick(FPS)
+            dt_ms = self.clock.tick(settings.FPS)
             dt = dt_ms / 1000.0
             dt = min(dt, 1.0 / 30.0)
 

@@ -10,7 +10,7 @@ player (added to the camera/group), and runs a basic event/update/draw loop.
 
 import sys
 import pygame
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+from src import settings
 
 # Use the real modules under src so imports match the rest of the project
 from src.core.camera import YSortCameraGroup
@@ -29,7 +29,7 @@ class Game:
     def __init__(self):
         pygame.init()
         # Ensure a display surface exists for CameraSystem
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT))
         pygame.display.set_caption("I Am The Fool - Engine")
 
         self.clock = pygame.time.Clock()
@@ -61,7 +61,7 @@ class Game:
         """
         while True:
             # Compute dt in seconds and clamp to avoid instability on stalls
-            dt_ms = self.clock.tick(FPS)
+            dt_ms = self.clock.tick(settings.FPS)
             dt = dt_ms / 1000.0
             dt = min(dt, 1.0 / 30.0)  # cap at ~33ms
 

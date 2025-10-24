@@ -1,5 +1,5 @@
 # Player sprite and collider constants
-from src.settings import TILE_SIZE
+from src import settings
 
 # Choose a smaller collider (narrower/taller) to match the visible player and
 # keep platforming feel. We'll derive a 50x100 collider from a 48x96 native
@@ -12,9 +12,9 @@ PLAYER_PAD = (1, 2, 1, 2)  # (L, T, R, B)
 # Derived collider size (authoritative)
 
 # Target collider expressed in tiles (width = 1.5 tiles, height = 2 tiles)
-# Using TILE_SIZE ensures consistency with level geometry.
-PLAYER_COLLIDER_W = int(1.5 * TILE_SIZE)
-PLAYER_COLLIDER_H = 2 * TILE_SIZE
+# Using settings.TILE_SIZE ensures consistency with level geometry.
+PLAYER_COLLIDER_W = int(1.5 * settings.TILE_SIZE)
+PLAYER_COLLIDER_H = 2 * settings.TILE_SIZE
 
 # Visual-only scale factor. When >1, the drawn sprite will be scaled up
 # for presentation while the collision rect (PLAYER_COLLIDER_W/H) remains

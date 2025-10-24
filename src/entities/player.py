@@ -2,28 +2,7 @@ import pygame
 from src.core.constants import PLAYER_COLLIDER_W, PLAYER_COLLIDER_H, PLAYER_PAD
 from src.core.sprite_align import align_frame_to_midbottom
 from src.core.support import load_aligned_vertical_sprite_frames
-from src.settings import (
-    PLAYER_WIDTH,
-    PLAYER_HEIGHT,
-    RUN_SPEED,
-    LEFT_KEYS,
-    RIGHT_KEYS,
-    JUMP_KEYS,
-    JUMP_SPEED,
-    GRAVITY,
-    MAX_FALL_SPEED,
-    FALL_MULTIPLIER,
-    LOW_JUMP_MULTIPLIER,
-    COYOTE_TIME,
-    JUMP_BUFFER,
-    JUMP_HOLD_TIME,
-    EASING_ENABLE,
-    EASING_ASCENT_GAIN_K,
-    EASING_DOMAIN_SCALE,
-    EASING_POWER,
-    EASING_CURVE,
-    DEBUG_JUMP_PHYSICS,
-)
+from src import settings
 
 # Utility functions world_to_tile, tile_to_world, move_and_collide_rect are
 # defined in core/collision.py and should be imported if needed
@@ -128,11 +107,11 @@ class Player(pygame.sprite.Sprite):
     # self.set_frame(aligned_frame)
         except Exception as e:
             print(f"Animation loading failed: {e}")
-            fallback_surface = pygame.Surface((PLAYER_WIDTH, PLAYER_HEIGHT))
+            fallback_surface = pygame.Surface((settings.PLAYER_WIDTH, settings.PLAYER_HEIGHT))
             fallback_surface.fill((70, 130, 180))
             self.walk_frames = [
                 align_frame_to_midbottom(
-                    fallback_surface, (PLAYER_WIDTH, PLAYER_HEIGHT)
+                    fallback_surface, (settings.PLAYER_WIDTH, settings.PLAYER_HEIGHT)
                 )
             ]
             self.idle_frames = [self.walk_frames[0]]
@@ -204,15 +183,15 @@ class Player(pygame.sprite.Sprite):
 
         # Input polling and edge detection
         keys = pygame.key.get_pressed()
-        left = any(keys[k] for k in LEFT_KEYS)
-        right = any(keys[k] for k in RIGHT_KEYS)
-        jump_pressed = any(keys[k] for k in JUMP_KEYS)
+        left = any(keys[k] for k in settings.LEFT_KEYS)
+        right = any(keys[k] for k in settings.RIGHT_KEYS)
+        jump_pressed = any(keys[k] for k in settings.JUMP_KEYS)
 
         # Optional per-frame jump diagnostics (off by default)
         # When enabled this prints a single compact line per frame giving the
         # key input and vertical physics state. Guarded so there's zero
         # runtime cost when DEBUG_JUMP_PHYSICS is False.
-        if DEBUG_JUMP_PHYSICS:
+        if settings.DEBUG_JUMP_PHYSICS:
             try:
                 # Format: [DEBUG] jump={jump_pressed} ground={on_ground} v_y={vel_y:.2f} y={rect.y:.2f} dt={dt:.3f}
                 # Also include the tracked timers for easier diagnosis.
@@ -246,27 +225,21 @@ class Player(pygame.sprite.Sprite):
             direction = -1
         elif right:
             direction = 1
-        self.vel_x = RUN_SPEED * direction
+        self.vel_x = settings.RUN_SPEED * direction
 
         # Jump triggering (coyote + buffer)
-        can_use_coyote = self.time_since_grounded <= COYOTE_TIME
-        buffered_jump = self.time_since_jump_pressed <= JUMP_BUFFER
+        can_use_coyote = self.time_since_grounded <= settings.COYOTE_TIME
+        buffered_jump = self.time_since_jump_pressed <= settings.JUMP_BUFFER
         if (self.on_ground or can_use_coyote) and buffered_jump:
             # Perform jump
-            self.vel_y = JUMP_SPEED
-            # Debug: log jump values so we can verify the configured jump
-            # impulse is actually applied at runtime. Remove or guard this
-            # behind a verbosity flag if you don't want console output.
-            try:
-                print(f"[DEBUG] Jump triggered: JUMP_SPEED={JUMP_SPEED}, vel_y={self.vel_y}")
-            except Exception:
-                pass
+            self.vel_y = settings.JUMP_SPEED
+            # Jump impulse applied; keep quiet unless verbose debug is enabled.
             # initialize easing timer for ascent shaping
             self.jump_time = 0.0
             self.on_ground = False
             # short grace so collision resolution and easing don't cancel the impulse
             self._just_jumped_timer = 0.08
-            if DEBUG_JUMP_PHYSICS:
+            if settings.DEBUG_JUMP_PHYSICS:
                 try:
                     print("[DEBUG] Jump triggered! entering grace window")
                 except Exception:
@@ -284,20 +257,20 @@ class Player(pygame.sprite.Sprite):
 
         # Gravity multipliers and semi-implicit Euler integration
         if self.vel_y < 0:  # rising
-            if self.jump_held and self.time_holding_jump < JUMP_HOLD_TIME:
-                g_eff = GRAVITY
+            if self.jump_held and self.time_holding_jump < settings.JUMP_HOLD_TIME:
+                g_eff = settings.GRAVITY
             else:
-                g_eff = GRAVITY * LOW_JUMP_MULTIPLIER
+                g_eff = settings.GRAVITY * settings.LOW_JUMP_MULTIPLIER
         elif self.vel_y > 0:  # falling
-            g_eff = GRAVITY * FALL_MULTIPLIER
+            g_eff = settings.GRAVITY * settings.FALL_MULTIPLIER
         else:
-            g_eff = GRAVITY
+            g_eff = settings.GRAVITY
 
         # Integrate velocity and position (semi-implicit)
         self.vel_y += g_eff * dt
         # Clamp downward velocity only
-        if self.vel_y > MAX_FALL_SPEED:
-            self.vel_y = MAX_FALL_SPEED
+        if self.vel_y > settings.MAX_FALL_SPEED:
+            self.vel_y = settings.MAX_FALL_SPEED
 
         # --- EASING-ASSISTED ASCENT OVERLAY ---
         # Enhance ascent feel without replacing physics. This modulation only
@@ -308,7 +281,7 @@ class Player(pygame.sprite.Sprite):
         # - u is clamped to [0,1].
         # - EASING_DOMAIN_SCALE compresses the denominator so easing acts
         #   earlier in the ascent (values < 1.0 start the curve sooner).
-        if EASING_ENABLE and self.vel_y < 0:
+        if settings.EASING_ENABLE and self.vel_y < 0:
             # advance ascent timer
             self.jump_time += dt
             # estimated physical time to apex (seconds); protect divide-by-zero
@@ -317,12 +290,12 @@ class Player(pygame.sprite.Sprite):
             #  - time to apex t_up ≈ |v0| / GRAVITY
             # Using these relations helps reason about how JUMP_SPEED and
             # GRAVITY trade off for height and airtime.
-            if GRAVITY != 0:
-                phys_time_to_apex = abs(JUMP_SPEED) / float(GRAVITY)
+            if settings.GRAVITY != 0:
+                phys_time_to_apex = abs(settings.JUMP_SPEED) / float(settings.GRAVITY)
             else:
                 phys_time_to_apex = 0.0
             # compress the domain so easing takes effect earlier in the jump
-            time_to_apex = phys_time_to_apex * (EASING_DOMAIN_SCALE if EASING_DOMAIN_SCALE else 1.0)
+            time_to_apex = phys_time_to_apex * (settings.EASING_DOMAIN_SCALE if settings.EASING_DOMAIN_SCALE else 1.0)
 
             # compute normalized progress u in [0,1]
             u = 0.0
@@ -330,7 +303,7 @@ class Player(pygame.sprite.Sprite):
                 u = max(0.0, min(1.0, self.jump_time / time_to_apex))
 
             # easing curve selection
-            if EASING_CURVE == "quint":
+            if settings.EASING_CURVE == "quint":
                 # easeOutQuint: starts fast and eases strongly near the end
                 e = 1.0 - (1.0 - u) ** 5
             else:
@@ -338,8 +311,8 @@ class Player(pygame.sprite.Sprite):
                 e = 1.0 - (1.0 - u) ** 3
 
             # non-linear power to emphasize apex region
-            power = EASING_POWER if EASING_POWER is not None else 1.0
-            k = EASING_ASCENT_GAIN_K if EASING_ASCENT_GAIN_K is not None else 0.25
+            power = settings.EASING_POWER if settings.EASING_POWER is not None else 1.0
+            k = settings.EASING_ASCENT_GAIN_K if settings.EASING_ASCENT_GAIN_K is not None else 0.25
 
             # multiplicative modulation factor (clamped to avoid sign flips)
             M = 1.0 - (k * (e ** power))
@@ -392,7 +365,7 @@ class Player(pygame.sprite.Sprite):
         # rather than deriving from the image bounding box.
         self.rect = pygame.Rect(0, 0, PLAYER_COLLIDER_W, PLAYER_COLLIDER_H)
         self.rect.midbottom = self.spawn_midbottom
-        self.vel_x = RUN_SPEED
+        self.vel_x = settings.RUN_SPEED
         self.vel_y = 0
         # Keep internal float position in sync with the rect so the next
         # physics update doesn't overwrite the respawn placement.

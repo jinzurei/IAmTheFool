@@ -1,12 +1,12 @@
 import pygame
-from src.settings import TILE_SIZE
+from src import settings
 
 
 class Tile(pygame.sprite.Sprite):
     # Base tile class
     def __init__(self, pos, groups):
         super().__init__(groups)
-        self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
+        self.image = pygame.Surface((settings.TILE_SIZE, settings.TILE_SIZE))
         self.rect = self.image.get_rect(topleft=pos)
 
 

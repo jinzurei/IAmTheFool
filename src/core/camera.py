@@ -1,5 +1,5 @@
 import pygame
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from src import settings
 
 
 class CameraLookAhead:
@@ -18,7 +18,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.offset = pygame.math.Vector2()
 
     def custom_draw(self, target_sprite):
-        screen_center = pygame.Vector2(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        screen_center = pygame.Vector2(settings.SCREEN_WIDTH // 2, settings.SCREEN_HEIGHT // 2)
         self.offset.x = int(target_sprite.rect.centerx - screen_center.x)
         self.offset.y = int(target_sprite.rect.centery - screen_center.y)
 
