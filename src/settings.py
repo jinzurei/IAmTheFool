@@ -45,19 +45,29 @@ PLAYER_HEIGHT = 128  # fallback visual height (pixels)
 # GRAVITY: px/s^2 base downward acceleration (positive downwards).
 # JUMP_SPEED: px/s initial vertical velocity at jump (negative = up).
 # MAX_FALL_SPEED: px/s clamp on downward velocity.
-RUN_SPEED = 320            # px/s, steady-state horizontal speed when held
-GRAVITY = 1800             # px/s^2, base downward acceleration (positive)
-JUMP_SPEED = -900          # px/s initial vertical velocity at jump (negative = up)
-MAX_FALL_SPEED = 2400      # px/s, clamp terminal velocity |v_y| when falling
+#
+# Physics notes:
+# - Peak height (approx): h ≈ v0^2 / (2 * GRAVITY)
+# - Time to apex (approx): t_up ≈ |v0| / GRAVITY
+# - Total airtime (approx): t_total ≈ 2 * t_up
+# - Horizontal distance (approx): d ≈ RUN_SPEED * t_total
+# The constants below raise jump height and airtime while keeping the
+# easing overlay and deterministic dt-based physics intact.
+RUN_SPEED = 380            # px/s, steady-state horizontal speed when held
+GRAVITY = 1400             # px/s^2, base downward acceleration (positive)
+# JUMP_SPEED (v0) is negative for upward impulse. Increasing |v0| raises
+# peak height h ≈ v0^2 / (2 * GRAVITY) and increases time to apex t_up ≈ |v0|/GRAVITY.
+JUMP_SPEED = -1300         # px/s, initial vertical velocity at jump (negative = up)
+MAX_FALL_SPEED = 2600      # px/s, clamp terminal velocity |v_y| when falling
 
 # --- Jump feel multipliers (dimensionless) ---
 FALL_MULTIPLIER = 1.8      # multiplies GRAVITY when v_y > 0 (falling)
-LOW_JUMP_MULTIPLIER = 2.0  # extra gravity when jump released while rising
+LOW_JUMP_MULTIPLIER = 1.7  # extra gravity when jump released while rising
 
 # --- Forgiveness windows (UNITS: seconds) ---
 COYOTE_TIME = 0.10         # jump allowed this long after leaving ground
 JUMP_BUFFER = 0.10         # jump press buffer window (seconds)
-JUMP_HOLD_TIME = 0.25      # max duration that “hold jump for higher jump” is honored
+JUMP_HOLD_TIME = 0.35      # max duration that “hold jump for higher jump” is honored
 
 # Controls
 JUMP_KEYS = [pygame.K_SPACE, pygame.K_w, pygame.K_UP]
@@ -68,3 +78,32 @@ RIGHT_KEYS = [pygame.K_d, pygame.K_RIGHT]
 MENU = "menu"
 PLAYING = "playing"
 DEAD = "dead"
+
+# --- Easing overlay for ascent shaping (dimensionless / feature flag) ---
+# When enabled, this gently modulates the upward velocity during ascent
+# using easeOutCubic to produce a fast takeoff and gentle apex.
+EASING_ENABLE = True
+# Gain k used in M(u) = 1 - k * e(u) where e(u) is the chosen easing curve.
+# Increasing k strengthens the apex softening. Typical tuning range: 0.15 - 0.5
+# Set to 0.4 for a more noticeable effect (cuts upward velocity by up to 40%).
+EASING_ASCENT_GAIN_K = 0.25
+
+# Domain scaling: multiply the physics time_to_apex by this value so easing
+# acts earlier in the ascent. Values < 1.0 make easing start sooner.
+EASING_DOMAIN_SCALE = 1.0  # fraction of physical time_to_apex
+
+# Power applied to the easing value e before modulation (non-linear gain).
+# e_effective = e ** EASING_POWER. Values > 1 emphasize the apex region.
+EASING_POWER = 1.2
+
+# Easing curve selector (string). Supported values: "cubic", "quint".
+# 'quint' gives a stronger slow-down near the end of the ascent.
+EASING_CURVE = "quint"
+
+# Notes:
+# - The overlay is multiplicative and only affects upward velocity while rising.
+# - u is clamped to [0,1] so behavior is deterministic across FPS.
+
+# Runtime debug helpers
+# Set to True to enable per-frame jump diagnostics printed to stdout.
+DEBUG_JUMP_PHYSICS = False

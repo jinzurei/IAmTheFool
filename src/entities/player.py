@@ -17,6 +17,12 @@ from src.settings import (
     COYOTE_TIME,
     JUMP_BUFFER,
     JUMP_HOLD_TIME,
+    EASING_ENABLE,
+    EASING_ASCENT_GAIN_K,
+    EASING_DOMAIN_SCALE,
+    EASING_POWER,
+    EASING_CURVE,
+    DEBUG_JUMP_PHYSICS,
 )
 
 # Utility functions world_to_tile, tile_to_world, move_and_collide_rect are
@@ -151,12 +157,16 @@ class Player(pygame.sprite.Sprite):
         # Variable jump state
         self.jump_held = False
         self.jump_hold_time = 0.0
+        # Time since the current jump started (seconds). Used for easing overlay.
+        self.jump_time = 0.0
         # Input / timing helpers (seconds)
         self.time_since_grounded = 0.0
         self.time_since_jump_pressed = 999.0
         self.time_holding_jump = 0.0
         self.prev_jump_pressed = False
         self.spawn_midbottom = pos
+        # small grace timer after a jump to avoid immediate re-grounding
+        self._just_jumped_timer = 0.0
 
     def draw(self, screen, off=None):
         """
@@ -198,6 +208,24 @@ class Player(pygame.sprite.Sprite):
         right = any(keys[k] for k in RIGHT_KEYS)
         jump_pressed = any(keys[k] for k in JUMP_KEYS)
 
+        # Optional per-frame jump diagnostics (off by default)
+        # When enabled this prints a single compact line per frame giving the
+        # key input and vertical physics state. Guarded so there's zero
+        # runtime cost when DEBUG_JUMP_PHYSICS is False.
+        if DEBUG_JUMP_PHYSICS:
+            try:
+                # Format: [DEBUG] jump={jump_pressed} ground={on_ground} v_y={vel_y:.2f} y={rect.y:.2f} dt={dt:.3f}
+                # Also include the tracked timers for easier diagnosis.
+                print(
+                    f"[DEBUG] jump={bool(jump_pressed)} ground={bool(self.on_ground)} "
+                    f"v_y={self.vel_y:.2f} y={float(self.rect.y):.2f} dt={dt:.3f} "
+                    f"time_since_grounded={self.time_since_grounded:.3f} "
+                    f"time_since_jump_pressed={self.time_since_jump_pressed:.3f}"
+                )
+            except Exception:
+                # Never raise from debug printing
+                pass
+
         # Jump press edge -> buffer the press
         if jump_pressed and not self.prev_jump_pressed:
             self.time_since_jump_pressed = 0.0
@@ -226,7 +254,23 @@ class Player(pygame.sprite.Sprite):
         if (self.on_ground or can_use_coyote) and buffered_jump:
             # Perform jump
             self.vel_y = JUMP_SPEED
+            # Debug: log jump values so we can verify the configured jump
+            # impulse is actually applied at runtime. Remove or guard this
+            # behind a verbosity flag if you don't want console output.
+            try:
+                print(f"[DEBUG] Jump triggered: JUMP_SPEED={JUMP_SPEED}, vel_y={self.vel_y}")
+            except Exception:
+                pass
+            # initialize easing timer for ascent shaping
+            self.jump_time = 0.0
             self.on_ground = False
+            # short grace so collision resolution and easing don't cancel the impulse
+            self._just_jumped_timer = 0.08
+            if DEBUG_JUMP_PHYSICS:
+                try:
+                    print("[DEBUG] Jump triggered! entering grace window")
+                except Exception:
+                    pass
             self.jump_held = True
             self.time_holding_jump = 0.0
             # consume buffer
@@ -254,6 +298,59 @@ class Player(pygame.sprite.Sprite):
         # Clamp downward velocity only
         if self.vel_y > MAX_FALL_SPEED:
             self.vel_y = MAX_FALL_SPEED
+
+        # --- EASING-ASSISTED ASCENT OVERLAY ---
+        # Enhance ascent feel without replacing physics. This modulation only
+        # acts while rising (v_y < 0) and multiplies the upward velocity by
+        # M(u) = 1 - k * (e(u) ** POWER), where e(u) is the chosen easing curve.
+        # - jump_time is incremented in seconds, so behavior is deterministic
+        #   across FPS.
+        # - u is clamped to [0,1].
+        # - EASING_DOMAIN_SCALE compresses the denominator so easing acts
+        #   earlier in the ascent (values < 1.0 start the curve sooner).
+        if EASING_ENABLE and self.vel_y < 0:
+            # advance ascent timer
+            self.jump_time += dt
+            # estimated physical time to apex (seconds); protect divide-by-zero
+            # Physics reminder:
+            #  - peak height h ≈ v0**2 / (2 * GRAVITY)
+            #  - time to apex t_up ≈ |v0| / GRAVITY
+            # Using these relations helps reason about how JUMP_SPEED and
+            # GRAVITY trade off for height and airtime.
+            if GRAVITY != 0:
+                phys_time_to_apex = abs(JUMP_SPEED) / float(GRAVITY)
+            else:
+                phys_time_to_apex = 0.0
+            # compress the domain so easing takes effect earlier in the jump
+            time_to_apex = phys_time_to_apex * (EASING_DOMAIN_SCALE if EASING_DOMAIN_SCALE else 1.0)
+
+            # compute normalized progress u in [0,1]
+            u = 0.0
+            if time_to_apex > 0.0:
+                u = max(0.0, min(1.0, self.jump_time / time_to_apex))
+
+            # easing curve selection
+            if EASING_CURVE == "quint":
+                # easeOutQuint: starts fast and eases strongly near the end
+                e = 1.0 - (1.0 - u) ** 5
+            else:
+                # fallback: easeOutCubic to preserve previous behavior
+                e = 1.0 - (1.0 - u) ** 3
+
+            # non-linear power to emphasize apex region
+            power = EASING_POWER if EASING_POWER is not None else 1.0
+            k = EASING_ASCENT_GAIN_K if EASING_ASCENT_GAIN_K is not None else 0.25
+
+            # multiplicative modulation factor (clamped to avoid sign flips)
+            M = 1.0 - (k * (e ** power))
+            if M < 0.0:
+                M = 0.0
+
+            # apply modulation only to upward motion (v_y is negative)
+            self.vel_y = self.vel_y * M
+        else:
+            # reset jump_time when not rising
+            self.jump_time = 0.0
 
         # Move horizontally by vx * dt, resolve collisions
         self.pos.x += self.vel_x * dt
