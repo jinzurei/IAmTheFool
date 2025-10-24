@@ -1,6 +1,6 @@
 # I Am the Fool 🎭
 
-A solo development project built from the ground up in **Python** and **Pygame** — an experiment in architecture, motion, and control.  
+A solo development project built from the ground up in **Python** and **Pygame**; an experiment in architecture, motion, and control.  
 This isn’t just a game; it’s a technical reflection on precision, process, and the discipline of design.  
 
 > “This is me versus me — the architect and the fool, both fighting to evolve.”
